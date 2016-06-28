@@ -1,0 +1,109 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <title>Broadbean Assignment</title>
+
+
+</head>
+<body ng-app="broadbeanApp">
+
+    <div data-ng-controller="appController as ac">
+
+        <div ng-repeat="scores in ac.scoreGroup | orderBy:scores:true">
+            {{scores}}
+            <br />
+            ----------------
+            <br />
+            <div ng-repeat="item in ac.data | orderBy: 'title'">
+                <div ng-if="item.scoreGroup == scores">
+                    <div class="row">
+                        <span class="col-lg-4">{{item.title}}</span>
+                        <span class="col-lg-4">| {{item.metacriticScore}}</span>
+                    </div>
+                </div>
+            </div>
+            <br />
+        </div>
+    </div>
+
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/Scripts/bower_components/angular/angular.min.js"></script>
+
+    <script type="text/javascript">
+
+        (function () {
+            "use strict";
+
+            var APPNAME = "broadbeanApp";
+
+            angular.module(APPNAME, []);
+
+            angular.module(APPNAME)
+                .controller('appController', AppController);
+
+            AppController.$inject = ['$scope', '$http'];
+
+            function AppController(
+                $scope
+                , $http
+                ) {
+
+                var vm = this;
+                vm.$scope = $scope;
+
+                vm.data = null;
+                vm.scoreGroup = [];
+
+                vm.onSuccess = _onSuccess;
+                vm.onErr = _onErr;
+                vm.filter = _filter;
+
+                init();
+
+                function init() {
+                    console.log("broadbean page loaded");
+
+                    $http.get(" http://www.cheapshark.com/api/1.0/deals").success(vm.onSuccess).error(vm.onErr);
+
+                };
+
+                function _onSuccess(data) {
+                    console.log("loaded");
+
+                    for (var i = 0; i < data.length; i++) {
+                        data[i].metacriticScore = parseInt(data[i].metacriticScore);
+                        data[i].scoreGroup = Math.ceil(data[i].metacriticScore / 10) * 10;
+                        //console.log('num after is ', data[i].metacriticScore);
+                    }
+                    vm.data = data;
+                    vm.filter();
+                };
+
+                function _filter() {
+
+                    for (var i = 0; i < vm.data.length; i++) {
+                        var newScoreGroup = vm.scoreGroup.indexOf(vm.data[i].scoreGroup) == -1;
+                        if (newScoreGroup) {
+
+                            vm.scoreGroup.push(vm.data[i].scoreGroup);
+                        }
+                    }
+
+                    console.log("groups are", vm.scoreGroup);
+                }
+
+                function _onErr(data) {
+                    console.log("ajax err", data);
+
+                };
+
+
+            }
+        })();
+    </script>
+
+</body>
+</html>
